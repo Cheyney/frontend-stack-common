@@ -1,0 +1,15 @@
+name: ${PROJECT_NAME}
+
+services:
+  app:
+    build: .
+    container_name: ${PROJECT_NAME}-app
+    restart: unless-stopped
+    networks:
+      - caddy
+    ports:
+      - "${APP_PORT:-8080}:80"
+
+networks:
+  caddy:
+    external: true
