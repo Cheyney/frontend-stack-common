@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "bunx --bun vite",
+    "build": "tsc -b && bunx --bun vite build",
+    "preview": "bunx --bun vite preview",
+    "generate": "bunx orval --config orval.config.ts",
+    "generate:watch": "bunx orval --config orval.config.ts --watch openapi.json"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
