@@ -1,7 +1,11 @@
-import { createRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { createRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { itemsLayoutRoute } from './layout'
-import { useGetItem } from '@/api/items/items'
+import { EditItemDialog } from './edit-dialog'
+import { useGetItem, useDeleteItem, getListItemsQueryKey } from '@/api/items/items'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -11,6 +15,14 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export const itemDetailRoute = createRoute({
   getParentRoute: () => itemsLayoutRoute,
@@ -21,6 +33,31 @@ export const itemDetailRoute = createRoute({
 function ItemDetailPage() {
   const { id } = itemDetailRoute.useParams()
   const { data: item, isLoading, isError, error, refetch } = useGetItem(id)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const deleteMutation = useDeleteItem()
+
+  const handleDelete = () => {
+    deleteMutation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({
+            queryKey: getListItemsQueryKey(),
+          })
+          toast.success('Item deleted')
+          void navigate({ to: '/items' })
+        },
+        onError: (err) => {
+          toast.error(err.message ?? 'Failed to delete item')
+        },
+      },
+    )
+  }
 
   if (isLoading) {
     return <ItemDetailSkeleton />
@@ -89,17 +126,47 @@ function ItemDetailPage() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
               <Pencil className="size-4" />
               Edit
             </Button>
-            <Button variant="destructive">
+            <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
               <Trash2 className="size-4" />
               Delete
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <EditItemDialog item={item} open={editOpen} onOpenChange={setEditOpen} />
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{item.name}&rdquo;? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

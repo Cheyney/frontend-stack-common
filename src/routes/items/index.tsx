@@ -3,14 +3,13 @@ import { z } from 'zod'
 import { createRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { keepPreviousData } from '@tanstack/react-query'
 import type { PaginationState, SortingState } from '@tanstack/react-table'
-import { PlusIcon } from 'lucide-react'
 import { itemsLayoutRoute } from './layout'
 import { getItemColumns } from './columns'
+import { CreateItemDialog } from './create-dialog'
 import { useListItems } from '@/api/items/items'
 import type { ListItemsParams } from '@/api/itemsCRUDAPI.schemas'
 import { DataTable } from '@/components/data-table/data-table'
 import { SearchInput } from '@/components/data-table/search-input'
-import { Button } from '@/components/ui/button'
 
 export const itemsSearchSchema = z.object({
   page: z.number().int().min(1).default(1).catch(1),
@@ -89,10 +88,7 @@ function ItemsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Items</h1>
-        <Button>
-          <PlusIcon />
-          New Item
-        </Button>
+        <CreateItemDialog />
       </div>
       <SearchInput
         value={search}
